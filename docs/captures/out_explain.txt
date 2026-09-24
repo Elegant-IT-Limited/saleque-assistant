@@ -1,0 +1,29 @@
+[1m1. scoped retrieval, EXPLAIN ANALYZE[0m[2m  (3,010 embeddings, 2 workspaces, HNSW on cosine)[0m
+   Limit (actual time=14.471..14.479 rows=8 loops=1)
+     ->  Sort (actual time=14.468..14.471 rows=8 loops=1)
+           Sort Key: ((embedding <=> $question::vector))
+           Sort Method: top-N heapsort  Memory: 17kB
+           ->  Result (actual time=0.121..13.269 rows=1506 loops=1)
+                 One-Time Filter: ((current_setting('app.workspace_id'::text, true))::uuid = '4f2a6c1e-8b3d-4e7a-9c21-0d5f7a3b9e11'::uuid)
+                 ->  Index Scan using embeddings_ws on embeddings (actual time=0.030..1.146 rows=1506 loops=1)
+                       Index Cond: (workspace_id = '4f2a6c1e-8b3d-4e7a-9c21-0d5f7a3b9e11'::uuid)
+   Planning Time: 0.424 ms
+   Execution Time: 14.730 ms
+[2m   note: the One-Time Filter line is the RLS policy; for a 1.5k-row tenant the planner picks the workspace index and an exact top-N sort[0m
+
+[1m1b. same search across the whole table[0m[2m  (large tenant or admin path: the planner switches to the HNSW index)[0m
+   Limit (actual time=1.045..1.145 rows=8 loops=1)
+     ->  Index Scan using embeddings_hnsw on embeddings (actual time=1.042..1.138 rows=8 loops=1)
+           Order By: (embedding <=> $question::vector)
+   Planning Time: 0.088 ms
+   Execution Time: 1.180 ms
+
+[1m2. second wall[0m[2m  (same table, NO workspace filter, running as app_user for workspace A)[0m
+   rows returned: 50   from workspace B: [32m0[0m   [2mpolicy: workspace_id = current_setting('app.workspace_id')[0m
+
+[1m3. same query as the database owner[0m[2m  (what the policy protects against)[0m
+   [36m4f2a6c1e[0m  1506 embeddings
+   [36mb7e1d2c3[0m  1504 embeddings
+
+[1m4. write with a foreign workspace_id, as app_user for A[0m
+   [32mrejected[0m[2m  new row violates row-level security policy for table "tasks"[0m

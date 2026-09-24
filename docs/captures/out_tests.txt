@@ -1,0 +1,30 @@
+[1m============================= test session starts ==============================[0m
+[1mcollecting ... [0mcollected 25 items
+
+tests/test_api.py::test_ask_returns_a_cited_answer_scoped_to_the_session_workspace [32mPASSED[0m[32m [  4%][0m
+tests/test_api.py::test_the_body_cannot_choose_the_workspace [32mPASSED[0m[32m      [  8%][0m
+tests/test_api.py::test_a_forged_session_is_rejected [32mPASSED[0m[32m              [ 12%][0m
+tests/test_api.py::test_scoring_another_workspaces_lead_is_a_404_not_a_leak [32mPASSED[0m[32m [ 16%][0m
+tests/test_contract.py::test_drops_every_sentence_that_cannot_point_at_a_retrieved_record [32mPASSED[0m[32m [ 20%][0m
+tests/test_contract.py::test_returns_the_not_found_state_when_nothing_can_be_cited [32mPASSED[0m[32m [ 24%][0m
+tests/test_contract.py::test_rejects_output_that_is_not_in_the_schema [32mPASSED[0m[32m [ 28%][0m
+tests/test_isolation.py::test_scoped_retrieval_never_returns_another_workspace [32mPASSED[0m[32m [ 32%][0m
+tests/test_isolation.py::test_second_wall_query_without_filter_still_cannot_see_b [32mPASSED[0m[32m [ 36%][0m
+tests/test_isolation.py::test_write_tagged_with_another_workspace_is_rejected [32mPASSED[0m[32m [ 40%][0m
+tests/test_isolation.py::test_workspace_b_sees_its_own_northwind_and_only_its_own [32mPASSED[0m[32m [ 44%][0m
+tests/test_jev.py::test_sends_typed_questions_to_system_one_and_routes_a_hot_lead_to_sales [32mPASSED[0m[32m [ 48%][0m
+tests/test_jev.py::test_low_confidence_goes_to_a_person_not_to_a_guess [32mPASSED[0m[32m [ 52%][0m
+tests/test_jev.py::test_confident_noise_is_archived [32mPASSED[0m[32m               [ 56%][0m
+tests/test_jev.py::test_every_decision_is_stored_and_metered_inside_the_workspace [32mPASSED[0m[32m [ 60%][0m
+tests/test_ledger.py::test_meters_one_credit_on_a_miss_and_zero_on_the_cached_repeat [32mPASSED[0m[32m [ 64%][0m
+tests/test_ledger.py::test_different_evidence_changes_the_cache_key [32mPASSED[0m[32m [ 68%][0m
+tests/test_ledger.py::test_refuses_before_calling_a_model_when_credits_run_out [32mPASSED[0m[32m [ 72%][0m
+tests/test_lifecycle.py::test_change_that_does_not_alter_the_document_does_not_enqueue [32mPASSED[0m[32m [ 76%][0m
+tests/test_lifecycle.py::test_content_change_enqueues_once_and_worker_reembeds [32mPASSED[0m[32m [ 80%][0m
+tests/test_lifecycle.py::test_deleting_a_record_removes_its_embedding_in_the_same_transaction [32mPASSED[0m[32m [ 84%][0m
+tests/test_providers.py::test_claude_is_forced_into_the_answer_schema_and_parses_to_a_verified_answer [32mPASSED[0m[32m [ 88%][0m
+tests/test_providers.py::test_an_overloaded_primary_falls_back_to_openai_with_the_same_contract [32mPASSED[0m[32m [ 92%][0m
+tests/test_retrieval.py::test_renewal_question_brings_the_email_note_task_and_deal [32mPASSED[0m[32m [ 96%][0m
+tests/test_retrieval.py::test_full_text_catches_an_exact_amount_that_vectors_blur [32mPASSED[0m[32m [100%][0m
+
+[32m============================== [32m[1m25 passed[0m[32m in 1.80s[0m[32m ==============================[0m

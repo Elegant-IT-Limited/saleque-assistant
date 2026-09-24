@@ -1,0 +1,24 @@
+[1mask[0m  [2mws 4f2a6c1e · 6 records retrieved in 2 ms · answer miss in 3 ms[0m
+[2mq   [0mWhat did we promise Northwind before the renewal call?
+
+  Three commitments are on record for Northwind. [35m[1][2][3][0m
+  Renewal price held at $48,000 for 12 months, confirmed by email on 9 Sep. [35m[1][0m
+  Two extra seats included at no charge, agreed on the 12 Sep call with Maya Chen. [35m[2][0m
+  An updated SOW was promised by 20 Sep. That task is still open. [35m[3][0m
+  The deal sits in Negotiation with a close date of 30 Sep. [35m[4][0m
+
+  [33mdropped[0m[2m  Northwind also asked about an API add-on.  (no source in retrieved set)[0m
+  [33mdropped[0m[2m  They mentioned a competitor quote.  (no source in retrieved set)[0m
+
+[2msources[0m
+  [35m[1][0m activity [2m9b2d5f6a[0m  Email on 2026-09-09: Pricing confirmation to Maya Chen. Confirmed the renewal …
+  [35m[2][0m activity [2me1d2c3b4[0m  Note on 2026-09-12: Call notes: renewal scope. Call with Maya Chen. Agreed two…
+  [35m[3][0m task     [2mc56a4180[0m  Task Send updated SOW to Maya Chen, open, due 2026-09-20, owner Sam.
+  [35m[4][0m deal     [2m3f2504e0[0m  Deal Northwind renewal, $48,000, stage Negotiation, closes 2026-09-30. Annual …
+
+[2mproposed actions[0m
+  [32m•[0m task          Send the updated SOW to Maya Chen[2m  due today[0m
+  [32m•[0m deal_update   Add 2 seats to the Northwind renewal deal
+  [32m•[0m calendar_hold Book the renewal call before 30 Sep
+
+[2mledger  feature=assistant.ask provider=test cache=miss credits=1  balance=199[0m

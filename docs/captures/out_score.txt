@@ -1,0 +1,7 @@
+[1mscore-leads[0m[2m  model=jev-1.13  auto>=0.8  ws 4f2a6c1e[0m
+
+  [36m16fd2706[0m  Daniel Reyes     buying      0.93  fit 2.61  budget 0.91  -> [32msales/high[0m
+  [36m5e8b1c2d[0m  Priya Nair       evaluating  0.58  fit 1.12  budget 0.04  -> [33mreview[0m
+  [36m0c1d2e3f[0m  SEO Growth Team  noise       0.97  fit 0.06  budget 0.00  -> [2marchived[0m
+
+[2mledger  feature=lead.score provider=typesafe calls=3 tokens=750  stored in lead_scores, scoped by RLS[0m
