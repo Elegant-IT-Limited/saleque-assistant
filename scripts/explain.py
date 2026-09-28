@@ -6,15 +6,17 @@ import uuid
 
 import psycopg
 
-from app.db import as_workspace, connect, reset
-from app.embed import to_vec
-from tests.seed import B_IDS, WS_A, WS_B, embedder, seed
+from app.db.migrate import reset
+from app.db.session import as_workspace, connect
+from app.integrations.embeddings import to_vec
+from tests.support.seed import B_IDS, WS_A, WS_B, embedder, seed
 
 dim, bold = (lambda s: f"\x1b[2m{s}\x1b[0m"), (lambda s: f"\x1b[1m{s}\x1b[0m")
 green, red, cyan = (lambda s: f"\x1b[32m{s}\x1b[0m"), (lambda s: f"\x1b[31m{s}\x1b[0m"), (lambda s: f"\x1b[36m{s}\x1b[0m")
 
-conn = connect(os.environ["DATABASE_URL"])
-reset(conn)
+url = os.environ["DATABASE_URL"]
+reset(url)
+conn = connect(url)
 seed(conn)
 
 # bulk: 1,500 extra records per workspace so the planner has something to choose between
