@@ -20,8 +20,9 @@ class SearchService:
     def enqueue_if_changed(self, ctx: TenantCtx, kind: RecordType, record_id: str) -> bool:
         """Call inside the write transaction. Enqueues only when the rendered document changed.
 
-        Most CRM edits (owner, stage, a timestamp) do not change what the record says,
-        and re-embedding them would be pure cost. Writing the outbox row in the same
+        Plenty of CRM writes (a timestamp, an internal id, any field the document does
+        not include) do not change what the record says, and re-embedding them would
+        be pure cost. Writing the outbox row in the same
         transaction as the record means there is no moment where the record exists
         and its embedding job does not.
         """
@@ -43,8 +44,11 @@ class SearchService:
             # trigger already removed its embedding, so there is nothing to write
             if row is not None:
                 doc = render_document(p["record_type"], row)
-                self.repo.upsert_embedding(ctx, p["record_type"], p["record_id"], doc,
-                                           hashlib.sha256(doc.encode()).digest(),
-                                           self.embedder.model, to_vec(self.embedder.embed(doc)))
+                digest = hashlib.sha256(doc.encode()).digest()
+                # two edits before the worker runs leave two outbox rows for one
+                # record; the second finds the hash already current and costs nothing
+                if self.repo.stored_hash(p["record_type"], p["record_id"]) != digest:
+                    self.repo.upsert_embedding(ctx, p["record_type"], p["record_id"], doc, digest,
+                                               self.embedder.model, to_vec(self.embedder.embed(doc)))
             self.repo.mark_processed(p["id"])
         return len(pending)

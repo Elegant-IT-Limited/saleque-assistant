@@ -10,7 +10,7 @@ license = "MIT"
 description = "Multi-tenant RAG assistant for the SaleQue CRM: cited answers on PostgreSQL and pgvector with Row Level Security, Claude and OpenAI behind one adapter, Jev lead scoring. Reference build."
 dependencies = [
   "fastapi>=0.141",
-  "psycopg[binary]>=3.3",
+  "psycopg[binary,pool]>=3.3",
   "pydantic>=2.13",
   "pydantic-settings>=2.11",
   "alembic>=1.16",
@@ -25,7 +25,9 @@ Repository = "https://github.com/Elegant-IT-Limited/saleque-assistant"
 "Case study" = "https://eleganttechbd.com/works/saleque-ai-crm-rag-assistant"
 
 [dependency-groups]
-dev = ["pytest>=9.1", "httpx>=0.28", "ruff>=0.16", "import-linter>=2.5"]
+# httpx drives FastAPI's TestClient; httpx2 is the transport the Anthropic and OpenAI SDKs use,
+# and the provider tests mock at that layer
+dev = ["pytest>=9.1", "httpx>=0.28", "httpx2>=1.0", "ruff>=0.16", "import-linter>=2.5"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

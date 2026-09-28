@@ -49,6 +49,15 @@ def test_write_tagged_with_another_workspace_is_rejected(db):
             c.execute("insert into tasks values (gen_random_uuid(), %s, 'smuggled task', null, 'open', null, null)", [WS_B])
 
 
+def test_a_workspace_can_read_only_its_own_row_and_change_none(db):
+    with as_workspace(db, WS_A) as c:
+        assert [r["id"] for r in c.execute("select id::text from workspaces").fetchall()] == [WS_A]
+    # deleting workspace B would cascade through every B table; app_user has no DELETE at all
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        with as_workspace(db, WS_A) as c:
+            c.execute("delete from workspaces where id = %s", [WS_B])
+
+
 def test_workspace_b_sees_its_own_northwind_and_only_its_own(db):
     with as_workspace(db, WS_B) as c:
         hits = search(c).retrieve(TenantCtx(WS_B), "Northwind price")

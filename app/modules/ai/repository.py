@@ -16,8 +16,11 @@ class AIRepository:
 
     def store_answer(self, ctx: TenantCtx, key: str, answer: dict, ttl_hours: int = 24) -> None:
         self.conn.execute(
+            # upsert: an expired row keeps its key until it is overwritten, and two
+            # requests that miss at the same moment must not collide
             "insert into answer_cache (key, workspace_id, answer, expires_at) "
-            "values (%s, %s, %s, now() + make_interval(hours => %s))",
+            "values (%s, %s, %s, now() + make_interval(hours => %s)) "
+            "on conflict (key) do update set answer = excluded.answer, expires_at = excluded.expires_at",
             [key, ctx.workspace_id, Jsonb(answer), ttl_hours],
         )
 

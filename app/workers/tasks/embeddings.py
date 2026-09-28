@@ -1,7 +1,8 @@
 """Background task: drain the embedding outbox for one workspace.
 
-Kept thin on purpose. The worker opens the tenant scope and hands over to the
-search service, so the same code path runs in a test, a script and the job queue.
+Kept thin on purpose: the caller opens the tenant scope (as_workspace) and this
+task hands over to the search service, so a test and any job runner share one
+code path.
 """
 
 from psycopg import Connection

@@ -6,16 +6,34 @@ as_workspace() is what switches the second wall on.
 """
 
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
+from typing import Protocol
 
 import psycopg
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
+
+# autocommit on the raw connection; every unit of work opens its own transaction
+# through as_workspace(), so nothing ever runs in an implicit one
+CONNECTION_KWARGS = {"autocommit": True, "row_factory": dict_row}
+
+
+class ConnectionSource(Protocol):
+    """Anything that lends out a connection for one unit of work: a pool in production."""
+
+    def connection(self) -> AbstractContextManager[psycopg.Connection]: ...
 
 
 def connect(url: str) -> psycopg.Connection:
-    # autocommit on the raw connection; every unit of work opens its own
-    # transaction through as_workspace() so nothing runs in an implicit one.
-    return psycopg.connect(url, autocommit=True, row_factory=dict_row)
+    """A single connection, for scripts and tests. The app itself always goes through a pool."""
+    return psycopg.connect(url, **CONNECTION_KWARGS)
+
+
+def create_pool(url: str, max_size: int = 10) -> ConnectionPool:
+    # One connection per in-flight request. Sharing one connection across FastAPI's
+    # worker threads would nest one request's transaction inside another's, and the
+    # second request's workspace setting would apply to the first request's queries.
+    return ConnectionPool(url, kwargs=CONNECTION_KWARGS, max_size=max_size, open=True)
 
 
 @contextmanager

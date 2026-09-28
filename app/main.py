@@ -12,7 +12,7 @@ from app.core.config import Settings, get_settings
 from app.core.dependencies import Container
 from app.core.exceptions import register_exception_handlers
 from app.core.routers import register_routers
-from app.db.session import connect
+from app.db.session import create_pool
 from app.integrations.ai_provider import ClaudeCompleter, OpenAICompleter, WithFallback
 from app.integrations.embeddings import OpenAIEmbedder
 from app.integrations.typesafe import jev_client
@@ -22,13 +22,16 @@ def build_container(settings: Settings) -> Container:
     def secret(v) -> str:
         return v.get_secret_value() if v else ""
 
+    # provider keys are optional so the service can start without one of them; a
+    # call to a provider with no key fails loudly at the provider, not silently here
+
     oa = openai.OpenAI(api_key=secret(settings.openai_api_key))
     completer = WithFallback(
         ClaudeCompleter(anthropic.Anthropic(api_key=secret(settings.anthropic_api_key)), settings.claude_model),
         OpenAICompleter(oa, settings.openai_model),
     )
     return Container(
-        conn=connect(settings.database_url),
+        db=create_pool(settings.database_url),
         embedder=OpenAIEmbedder(oa, settings.embedding_model),
         completer=completer,
         jev=jev_client(settings),

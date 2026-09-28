@@ -78,10 +78,11 @@ class AIService:
 
     def ask(self, ctx: TenantCtx, question: str, retrieved: list[Hit]) -> AskResult:
         """Meter, cache, route, refuse."""
-        # The cache key includes the exact evidence. Same question, same records:
-        # the stored answer is still true. Same question after a record changed:
-        # different ids or content, so a new key and a fresh answer.
-        evidence = ",".join(sorted(h.record_id for h in retrieved))
+        # The cache key includes the exact evidence: every record id and a hash of the
+        # text the model would read. Same question, same records, same text: the
+        # stored answer is still true. If any record's text changed, the key changes
+        # and the answer is regenerated.
+        evidence = ",".join(sorted(f"{h.record_id}:{hashlib.sha256(h.content.encode()).hexdigest()[:16]}" for h in retrieved))
         key = hashlib.sha256("|".join([ctx.workspace_id, normalise(question), evidence, self.completer.model]).encode()).hexdigest()
 
         cached = self.repo.cached_answer(key)

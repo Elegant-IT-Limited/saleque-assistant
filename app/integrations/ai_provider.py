@@ -79,10 +79,18 @@ class OpenAICompleter:
         return Completion(raw, self.provider, r.model, r.usage.prompt_tokens, r.usage.completion_tokens)
 
 
-# Only transport-level failures move to the fallback. A reply that parses but fails
-# validation is not retried on another provider: that is a prompt problem, and
-# hiding it behind a second model would make it invisible.
-FALLBACK_ON = (anthropic.APIStatusError, anthropic.APIConnectionError, openai.APIStatusError, openai.APIConnectionError)
+def should_fall_back(exc: Exception) -> bool:
+    """Outages, rate limits and timeouts move to the fallback. Our own mistakes do not.
+
+    A 400, 401 or 422 means the request or the key is wrong, and sending the same
+    request to a second provider would only hide that. A reply that parses but fails
+    validation is not retried here either: that is a prompt problem.
+    """
+    if isinstance(exc, (anthropic.APIConnectionError, openai.APIConnectionError)):
+        return True  # includes timeouts
+    if isinstance(exc, (anthropic.APIStatusError, openai.APIStatusError)):
+        return exc.status_code == 429 or exc.status_code >= 500
+    return False
 
 
 class WithFallback:
@@ -95,7 +103,9 @@ class WithFallback:
     def complete(self, prompt: StructuredPrompt) -> Completion:
         try:
             return self.primary.complete(prompt)
-        except FALLBACK_ON:
+        except (anthropic.APIError, openai.APIError) as exc:
+            if not should_fall_back(exc):
+                raise
             # The Completion carries the provider that actually answered, so the
             # ledger records OpenAI here, not Claude.
             return self.fallback.complete(prompt)

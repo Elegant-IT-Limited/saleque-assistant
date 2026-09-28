@@ -1,6 +1,6 @@
 """FastAPI dependency providers shared by every module.
 
-The Container holds the long-lived clients (database connection, embedder, model
+The Container holds the long-lived clients (connection pool, embedder, model
 adapters). main.py builds it from settings in production; tests build it by hand
 with recorded clients, and nothing else in the app needs to know the difference.
 """
@@ -15,14 +15,14 @@ from typesafe_sdk import TypeSafeClient
 
 from app.core.security import verify_session
 from app.core.tenancy import TenantCtx
-from app.db.session import as_workspace
+from app.db.session import ConnectionSource, as_workspace
 from app.integrations.ai_provider import Completer
 from app.integrations.embeddings import Embedder
 
 
 @dataclass
 class Container:
-    conn: Connection
+    db: ConnectionSource
     embedder: Embedder
     completer: Completer
     jev: TypeSafeClient
@@ -47,9 +47,9 @@ def get_db(
     container: Annotated[Container, Depends(get_container)],
     ctx: Annotated[TenantCtx, Depends(get_current_tenant)],
 ) -> Iterator[Connection]:
-    """One transaction per request, already scoped to the caller's workspace."""
-    with as_workspace(container.conn, ctx.workspace_id) as conn:
-        yield conn
+    """A connection of its own for this request, in one transaction, scoped to the caller's workspace."""
+    with container.db.connection() as conn, as_workspace(conn, ctx.workspace_id) as scoped:
+        yield scoped
 
 
 ContainerDep = Annotated[Container, Depends(get_container)]

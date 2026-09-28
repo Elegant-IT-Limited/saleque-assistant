@@ -5,6 +5,7 @@ import json
 import anthropic
 import httpx2
 import openai
+import pytest
 
 from app.integrations.ai_provider import ClaudeCompleter, OpenAICompleter, WithFallback
 from app.modules.ai.service import build_prompt, verify
@@ -14,11 +15,14 @@ HIT = Hit("deal", "3f2504e0-4f89-41d3-9a0c-0305e82c3301", "Deal Northwind renewa
 ANSWER = {"sentences": [{"text": "The deal is in Negotiation.", "sources": [HIT.record_id]}], "actions": []}
 
 
+ERRORS = {400: "invalid_request_error", 529: "overloaded_error"}
+
+
 def claude(status: int, seen: list) -> ClaudeCompleter:
     def handler(req: httpx2.Request) -> httpx2.Response:
         seen.append(json.loads(req.content))
         if status != 200:
-            return httpx2.Response(status, json={"type": "error", "error": {"type": "overloaded_error", "message": "Overloaded"}})
+            return httpx2.Response(status, json={"type": "error", "error": {"type": ERRORS[status], "message": "error"}})
         return httpx2.Response(200, json={
             "id": "msg_01", "type": "message", "role": "assistant", "model": "claude-sonnet-5",
             "content": [{"type": "tool_use", "id": "toolu_01", "name": "answer", "input": ANSWER}],
@@ -61,3 +65,11 @@ def test_an_overloaded_primary_falls_back_to_openai_with_the_same_contract():
     assert o_seen[0]["response_format"]["json_schema"]["name"] == "answer"
     assert (out.provider, out.model) == ("openai", "gpt-5-mini")
     assert verify(out.raw, [HIT]).not_found is False
+
+
+def test_a_bad_request_is_not_hidden_behind_the_fallback():
+    c_seen: list = []
+    o_seen: list = []
+    with pytest.raises(anthropic.BadRequestError):
+        WithFallback(claude(400, c_seen), gpt(o_seen)).complete(build_prompt("Where is the Northwind deal?", [HIT]))
+    assert len(c_seen) == 1 and o_seen == []

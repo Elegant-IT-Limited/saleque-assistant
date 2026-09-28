@@ -42,6 +42,17 @@ def test_different_evidence_changes_the_cache_key(db):
     assert second.cache == "miss"
 
 
+def test_an_expired_answer_is_regenerated_not_an_error(db):
+    ctx, q = TenantCtx(WS_A), "Who owns the Northwind SOW task?"
+    with as_workspace(db, WS_A) as c:
+        search, ai = services(c)
+        hits = search.retrieve(ctx, q)
+        assert ai.ask(ctx, q, hits).cache == "miss"
+        c.execute("update answer_cache set expires_at = now() - interval '1 minute'")
+        again = ai.ask(ctx, q, hits)
+    assert (again.cache, again.credits) == ("miss", 1)
+
+
 def test_refuses_before_calling_a_model_when_credits_run_out(db):
     calls = []
 

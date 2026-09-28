@@ -35,7 +35,13 @@ def upgrade() -> None:
         end $$
     """)
     op.execute("grant usage on schema public to app_user")
-    op.execute("grant select, insert, update, delete on workspaces to app_user")
+    # Workspaces are created and changed by the product's admin path, never by this
+    # service, so app_user may only read its own row. Without this, one workspace
+    # could delete another and the foreign-key cascades would take its data with it.
+    # No FORCE here: the owner (migrations, the admin path) manages every workspace.
+    op.execute("grant select on workspaces to app_user")
+    op.execute("alter table workspaces enable row level security")
+    op.execute("create policy workspaces_self on workspaces for select using (id = current_setting('app.workspace_id', true)::uuid)")
     # Tables and sequences created by later migrations get the same grants
     # automatically, so no module migration can forget them.
     op.execute("alter default privileges in schema public grant select, insert, update, delete on tables to app_user")
@@ -45,6 +51,6 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.execute("alter default privileges in schema public revoke usage, select on sequences from app_user")
     op.execute("alter default privileges in schema public revoke select, insert, update, delete on tables from app_user")
-    op.execute("drop table workspaces")
+    op.execute("drop table workspaces")  # takes its policy with it
     # app_user and the vector extension are left in place: other databases on the
     # same cluster may depend on them.
