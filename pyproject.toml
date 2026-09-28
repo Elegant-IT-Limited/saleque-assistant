@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "saleque-assistant"
-version = "0.8.0"
+version = "0.9.0"
 requires-python = ">=3.10"
 license = "MIT"
 description = "Multi-tenant RAG assistant for the SaleQue CRM: cited answers on PostgreSQL and pgvector with Row Level Security, Claude and OpenAI behind one adapter, Jev lead scoring. Reference build."
@@ -12,6 +12,9 @@ dependencies = [
   "fastapi>=0.141",
   "psycopg[binary]>=3.3",
   "pydantic>=2.13",
+  "pydantic-settings>=2.11",
+  "alembic>=1.16",
+  "sqlalchemy>=2.0.40",
   "anthropic>=1.8",
   "openai>=3.19",
   "typesafe-sdk>=0.7.1",
@@ -21,15 +24,15 @@ dependencies = [
 Repository = "https://github.com/Elegant-IT-Limited/saleque-assistant"
 "Case study" = "https://eleganttechbd.com/works/saleque-ai-crm-rag-assistant"
 
-[project.optional-dependencies]
-dev = ["pytest>=9.1", "httpx>=0.28", "ruff>=0.16"]
+[dependency-groups]
+dev = ["pytest>=9.1", "httpx>=0.28", "ruff>=0.16", "import-linter>=2.5"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
 
-[tool.setuptools]
-packages = ["app"]
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.ruff]
 target-version = "py310"
@@ -38,3 +41,43 @@ line-length = 140
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+# the alembic/ folder at the root would otherwise make ruff treat the package as first party
+known-third-party = ["alembic"]
+
+# Module boundaries, checked in CI with `lint-imports`.
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "Modules talk through services, never through another module's repository"
+type = "forbidden"
+source_modules = ["app.modules.ai", "app.modules.lead", "app.modules.search"]
+forbidden_modules = ["app.modules.ai.repository", "app.modules.lead.repository", "app.modules.search.repository"]
+# a module may use its own repository
+ignore_imports = [
+  "app.modules.ai.** -> app.modules.ai.repository",
+  "app.modules.lead.** -> app.modules.lead.repository",
+  "app.modules.search.** -> app.modules.search.repository",
+]
+# wiring another module's dependency provider is fine; importing its repository class is not
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Search depends on no other module"
+type = "forbidden"
+source_modules = ["app.modules.search"]
+forbidden_modules = ["app.modules.ai", "app.modules.lead"]
+
+[[tool.importlinter.contracts]]
+name = "Integrations and workers never import routes"
+type = "forbidden"
+source_modules = ["app.integrations", "app.workers", "app.modules.ai.service", "app.modules.lead.service", "app.modules.search.service"]
+forbidden_modules = ["app.api", "app.core.routers", "app.modules.ai.api", "app.modules.lead.api"]
+
+[[tool.importlinter.contracts]]
+name = "Integrations are leaves: they know nothing about product modules"
+type = "forbidden"
+source_modules = ["app.integrations"]
+forbidden_modules = ["app.modules"]
