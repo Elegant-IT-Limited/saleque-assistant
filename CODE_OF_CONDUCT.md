@@ -4,4 +4,4 @@ This project follows the [Contributor Covenant](https://www.contributor-covenant
 
 In short: be respectful, assume good intent, and keep discussion about the work. Harassment, personal attacks and discriminatory language are not acceptable in issues, pull requests or any other project space.
 
-To report a problem, use GitHub's private vulnerability reporting on this repository or contact the Elegant IT Limited maintainers through the organisation page. Reports are handled confidentially.
+To report a conduct problem, write to the maintainers through the contact form at [eleganttechbd.com/contact](https://eleganttechbd.com/contact) and name this repository. Reports are read by the maintainers only and handled confidentially. Security issues go through `SECURITY.md` instead.
